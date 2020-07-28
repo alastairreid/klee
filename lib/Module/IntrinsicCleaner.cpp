@@ -110,6 +110,22 @@ bool IntrinsicCleanerPass::runOnBasicBlock(BasicBlock &b, Module &M) {
         break;
       }
 
+        // Floating point minnum/maxnum binary operators
+      case Intrinsic::minnum:
+      case Intrinsic::maxnum: {
+        Intrinsic::ID id = ii->getIntrinsicID();
+        IRBuilder<> builder(ii->getParent(), ii->getIterator());
+        Value *op0 = ii->getArgOperand(0);
+        Value *op1 = ii->getArgOperand(1);
+        Value *cmp = id == Intrinsic::maxnum ? builder.CreateFCmpOGE(op0, op1) : builder.CreateFCmpOLE(op0, op1);
+        Value *result = builder.CreateSelect(cmp, op0, op1);
+        ii->replaceAllUsesWith(result);
+        ii->eraseFromParent();
+        dirty = true;
+        break;
+      }
+
+
       case Intrinsic::sadd_with_overflow:
       case Intrinsic::ssub_with_overflow:
       case Intrinsic::smul_with_overflow:
