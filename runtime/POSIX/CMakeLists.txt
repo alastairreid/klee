@@ -16,6 +16,7 @@ set(SRC_FILES
         illegal.c
         klee_init_env.c
         misc.c
+        pthread.c
         selinux.c
         stubs.c
         )
