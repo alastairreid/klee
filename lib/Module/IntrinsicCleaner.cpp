@@ -20,6 +20,7 @@
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/IntrinsicInst.h"
+#include "llvm/IR/IntrinsicsX86.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
 #include "llvm/Pass.h"
@@ -340,6 +341,16 @@ bool IntrinsicCleanerPass::runOnBasicBlock(BasicBlock &b, Module &M) {
         break;
       }
 #endif
+
+        // llvm.x86.sse2.pause is used to optimize spinlocks.
+        // It is architecturally equivalent to NOP and it is implemented
+        // (and used) even on x86 processors that do not implement SSE2.
+        // There is no way to prevent LLVM from generating this instruction.
+      case Intrinsic::x86_sse2_pause:
+        ii->eraseFromParent();
+        dirty = true;
+        break;
+
       default:
         IL->LowerIntrinsicCall(ii);
         dirty = true;
