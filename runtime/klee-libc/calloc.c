@@ -7,6 +7,8 @@
 //
 //===----------------------------------------------------------------------===*/
 
+#include <errno.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -45,3 +47,22 @@ void *realloc(void *ptr, size_t nbytes) {
 	return addr;
 }
 #endif
+
+int posix_memalign(void **memptr, size_t alignment, size_t size) {
+        if (size == 0) {
+              *memptr = NULL; // could also be a unique pointer value
+              return 0;
+        }
+
+        void *addr = malloc(size + alignment);
+        if (!addr) {
+                // *memptr is not modified on failure
+                return ENOMEM;
+        }
+
+        // align address (assumes alignment is power of 2)
+        addr = (void*)(((intptr_t)addr + alignment - 1) & !(alignment - 1));
+
+        *memptr = addr;
+        return 0;
+}
